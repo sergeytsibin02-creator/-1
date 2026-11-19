@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сербия 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+/* Тема: ночная Сава. Сцена 1280×720, одна идея на слайд, живые элементы: месяцы, маршрут, калькулятор, чек-лист. */
+:root{
+  --ink:#0E1A2B; --panel:#15263D; --panel2:#1B3150; --line:#2C4566;
+  --paper:#F1F5F9; --mute:#AABBD0; --red:#E85B4D; --gold:#F2BC52; --river:#58C6DA;
+  --display:'Unbounded','Arial Black',Arial,sans-serif;
+  --body:'Golos Text','Segoe UI',Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--ink);color:var(--paper);font-family:var(--body);overflow:hidden}
+body{font-size:18px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+a{color:var(--river)}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+#viewport{position:fixed;inset:0}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0}
+.slide{position:absolute;inset:0;padding:44px 64px 64px;visibility:hidden;opacity:0;transition:opacity .35s ease;overflow:hidden;
+  background:radial-gradient(900px 500px at 100% 0%,#1B3556 0%,transparent 60%),var(--ink)}
+.slide.active{visibility:visible;opacity:1}
+.eyebrow{font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:10px}
+h2{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.15;text-wrap:balance;margin-bottom:8px}
+.lead{color:var(--mute);font-size:19px;max-width:760px;margin-bottom:22px}
+h3{font-size:20px;font-weight:600;margin-bottom:6px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.card p,.card li{color:var(--mute);font-size:17px}
+.card ul{padding-left:18px}
+.tag{display:inline-block;font-size:14px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--panel2);color:var(--river);margin-bottom:8px}
+.tag.warn{color:var(--gold)}
+.btn{padding:9px 16px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-weight:500;font-size:17px;transition:background .15s}
+.btn:hover{background:#24406A}
+.btn[aria-pressed="true"],.btn.on{background:var(--gold);color:#1A1405;border-color:var(--gold)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.big{font-family:var(--display);font-weight:700;font-size:44px;line-height:1.05;color:var(--paper)}
+.big small{font-size:20px;font-weight:500;color:var(--mute);font-family:var(--body)}
+.src{font-size:14px;color:#8398B2;margin-top:8px}
+
+/* навигация */
+#nav{position:fixed;left:0;right:0;bottom:0;height:48px;display:flex;align-items:center;gap:12px;padding:0 20px;z-index:5;background:linear-gradient(transparent,rgba(8,14,24,.9))}
+#nav .dots{display:flex;gap:7px;flex:1;justify-content:center;flex-wrap:wrap}
+#nav .dot{width:11px;height:11px;border-radius:50%;background:var(--line);padding:0}
+#nav .dot.active{background:var(--gold);transform:scale(1.25)}
+#nav .nb{width:38px;height:34px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);font-size:18px}
+#nav .cnt{font-size:15px;color:var(--mute);min-width:56px;text-align:center}
+
+/* 1 обложка */
+.cover{display:flex;flex-direction:column;justify-content:center;gap:18px;padding-left:80px}
+.stripe{position:absolute;left:0;right:0;top:0;height:8px;display:flex}
+.stripe i{flex:1}
+.cover h1{font-family:var(--display);font-weight:700;font-size:92px;line-height:1;letter-spacing:-.02em}
+.cover h1 span{color:var(--red)}
+.cover .sub{font-size:26px;color:var(--mute);max-width:760px}
+.chips{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.chip{padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-size:18px}
+.hint{position:absolute;right:64px;bottom:72px;color:var(--mute);font-size:16px}
+
+/* 4 месяцы */
+.mwrap{display:grid;grid-template-columns:230px 1fr;gap:22px}
+.mlist{display:flex;flex-direction:column;gap:8px}
+.mlist .btn{text-align:left;display:flex;justify-content:space-between;gap:8px}
+.mpanel{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.bars{display:flex;align-items:flex-end;gap:12px;height:190px;margin-top:6px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+.bar b{width:100%;border-radius:8px 8px 0 0;background:var(--line);transition:height .3s,background .2s;display:block}
+.bar.on b{background:var(--gold)}
+.bar span{font-size:14px;color:var(--mute)}
+.bar.on span{color:var(--gold);font-weight:600}
+
+/* 6 маршрут */
+.rwrap{display:grid;grid-template-columns:200px 1fr 300px;gap:18px}
+.dlist{display:flex;flex-direction:column;gap:6px}
+.dlist .btn{text-align:left;padding:8px 12px;font-size:16px}
+.dlist .btn small{display:block;color:inherit;opacity:.75;font-size:13px}
+.dpanel h3{font-family:var(--display);font-size:22px;margin-bottom:10px}
+.dpanel li{margin:0 0 7px;color:var(--paper);font-size:18px}
+.mapbox{padding:8px}
+.mapbox svg{width:100%;height:auto;display:block}
+
+/* 7 бюджет */
+.bwrap{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
+.ctl{display:grid;grid-template-columns:150px 1fr 96px;align-items:center;gap:10px;margin-bottom:9px;font-size:16px}
+.ctl label{color:var(--mute)}
+.ctl output{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--gold)}
+select,input[type=number]{background:var(--panel2);color:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:16px;width:100%}
+.total{font-family:var(--display);font-size:46px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.stack{display:flex;height:22px;border-radius:7px;overflow:hidden;margin:12px 0 10px}
+.stack i{display:block;transition:width .25s}
+.leg{display:grid;grid-template-columns:1fr auto;gap:5px 12px;font-size:16px;font-variant-numeric:tabular-nums}
+.leg span.k{display:flex;align-items:center;gap:8px;color:var(--mute)}
+.leg span.k::before{content:"";width:12px;height:12px;border-radius:3px;background:var(--c)}
+
+/* 9 чек-лист */
+.cwrap{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
+.chk{display:flex;gap:12px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--line);font-size:17px;cursor:pointer}
+.chk input{width:22px;height:22px;margin-top:2px;accent-color:var(--gold);flex:none}
+.chk input:checked+span{color:var(--mute);text-decoration:line-through}
+.prog{height:12px;border-radius:7px;background:var(--panel2);overflow:hidden;margin:6px 0 4px}
+.prog i{display:block;height:100%;background:var(--river);width:0;transition:width .25s}
+.tl{border-left:2px solid var(--line);padding-left:16px;display:flex;flex-direction:column;gap:12px}
+.tl b{color:var(--gold);display:block;font-size:15px}
+
+/* таблица */
+table{width:100%;border-collapse:collapse;font-size:16px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--gold);font-weight:600;font-size:14px;text-transform:uppercase;letter-spacing:.08em}
+td{color:var(--mute)}
+td:first-child{color:var(--paper);font-weight:600}
+
+/* мобильный режим: слайды идут подряд */
+body.flow{overflow:auto}
+body.flow #viewport{position:static}
+body.flow #stage{position:static;width:auto;height:auto;transform:none!important}
+body.flow .slide{position:relative;inset:auto;visibility:visible;opacity:1;padding:28px 18px;border-bottom:1px solid var(--line);overflow:visible}
+body.flow #nav,body.flow .hint{display:none}
+body.flow h2{font-size:26px}
+body.flow .cover{padding-left:18px}
+body.flow .cover h1{font-size:54px}
+body.flow .mwrap,body.flow .mpanel,body.flow .rwrap,body.flow .bwrap,body.flow .cwrap{grid-template-columns:1fr}
+body.flow .ctl{grid-template-columns:110px 1fr 84px}
+body.flow .big{font-size:34px}
+body.flow .total{font-size:36px}
+@media (prefers-reduced-motion:reduce){.slide,.bar b,.stack i,.prog i{transition:none}}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- 1 -->
+<section class="slide cover" id="s1" aria-label="Обложка">
+  <div class="stripe"><i style="background:#C6363C"></i><i style="background:#0C4076"></i><i style="background:#EDEFF2"></i></div>
+  <div class="eyebrow">Отпуск вдвоём · 15–19 марта 2027</div>
+  <h1>Сербия</h1>
+  <p class="sub">Пять дней из Санкт-Петербурга: Белград, Нови-Сад и дунайские города</p>
+  <div class="chips"><span class="chip">2 человека</span><span class="chip">5 дней, 4 ночи</span><span class="chip">прямой рейс из Пулково</span><span class="chip">без визы</span></div>
+  <div class="hint">Стрелки ← → или кнопки внизу</div>
+</section>
+
+<!-- 2 -->
+<section class="slide" id="s2" aria-label="Почему Сербия">
+  <div class="eyebrow">Почему Сербия</div>
+  <h2>Короткая поездка без лишних формальностей</h2>
+  <p class="lead">Для россиян въезд без визы, перелёт занимает полдня, а цены заметно ниже, чем в большинстве стран Европы.</p>
+  <div class="grid g4">
+    <div class="card"><div class="big">30<small> дней</small></div><p>без визы для граждан России. Наши 5 дней укладываются с запасом.</p></div>
+    <div class="card"><div class="big">≈3<small> часа</small></div><p>прямой рейс Санкт-Петербург — Белград (Air Serbia).</p></div>
+    <div class="card"><div class="big">117<small> RSD</small></div><p>за 1 € на начало 2026 года. Курс динара держится стабильно.</p></div>
+    <div class="card"><div class="big">≈11<small> °C</small></div><p>днём в марте: ранняя весна, меньше туристов, билеты дешевле, чем в мае.</p></div>
+  </div>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card"><h3>Город</h3><p>Белград: крепость, слияние Савы и Дуная, кафаны и ночная жизнь.</p></div>
+    <div class="card"><h3>Вино и барокко</h3><p>Нови-Сад и Сремски-Карловци: крепость над Дунаем и винные подвалы.</p></div>
+    <div class="card"><h3>Север</h3><p>Суботица у границы с Венгрией: сецессия и спокойный городской ритм.</p></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="slide" id="s3" aria-label="Въезд и документы">
+  <div class="eyebrow">Въезд и документы</div>
+  <h2>Что нужно взять с собой</h2>
+  <div class="grid g4" style="margin-top:14px">
+    <div class="card"><span class="tag">Обязательно</span><h3>Загранпаспорт</h3><p>Срок действия не менее 90 дней после окончания поездки. Лучше биометрический.</p></div>
+    <div class="card"><span class="tag">Обязательно</span><h3>Безвиз до 30 дней</h3><p>День въезда входит в срок. Шенгенское правило 90/180 здесь не применяется: Сербия не в Шенгене.</p></div>
+    <div class="card"><span class="tag">Рекомендуем</span><h3>Медицинская страховка</h3><p>Ориентир сербских властей: покрытие от 20 000 €. Российские туристические полисы обычно начинаются от 30 000 €.</p></div>
+    <div class="card"><span class="tag">Рекомендуем</span><h3>Бронь и обратный билет</h3><p>Держите подтверждение жилья и билет домой в телефоне и на бумаге на случай вопросов на границе.</p></div>
+  </div>
+  <div class="card" style="margin-top:16px;border-color:var(--gold)">
+    <span class="tag warn">Проверить заранее</span>
+    <p style="color:var(--paper)">Летом 2026 появлялись сообщения о возможных визах для россиян. Сербские власти их опровергли (данные на сентябрь 2026). Сербия также готовится к Шенгену к концу 2027 года. Перед покупкой билетов и за 2–3 недели до вылета сверьтесь с сайтом МИД России и посольством Сербии.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" id="s4" aria-label="Когда ехать">
+  <div class="eyebrow">Когда ехать</div>
+  <h2>Март выбран по вашим датам: сравните его с другими месяцами</h2>
+  <div class="mwrap" style="margin-top:14px">
+    <div class="mlist" id="mlist" role="group" aria-label="Месяц поездки"></div>
+    <div>
+      <div class="mpanel">
+        <div class="card"><div class="tag" id="m-tag">Погода</div><div class="big" id="m-temp"></div><p id="m-note" style="margin-top:8px"></p></div>
+        <div class="card"><div class="tag">Билеты LED — BEG</div><div class="big" id="m-price"></div><p id="m-pnote" style="margin-top:8px">Минимальная найденная цена туда-обратно на одного. Для двоих умножайте на два.</p></div>
+      </div>
+      <div class="card" style="margin-top:16px;padding-bottom:12px">
+        <h3>Цена билета по месяцам, ₽</h3>
+        <div class="bars" id="bars"></div>
+      </div>
+      <p class="src">Погода: усреднённые дневные температуры в Белграде. Цены: Т-Банк Путешествия (ноябрь 2026), даты в выборке разные, это ориентир.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="slide" id="s5" aria-label="Как долететь">
+  <div class="eyebrow">Перелёт</div>
+  <h2>Санкт-Петербург — Белград</h2>
+  <p class="lead">Вылет 15 марта, возвращение 19 марта, двое взрослых. Прямой рейс есть, пересадки нужны только ради цены. Разница во времени с Белградом: 1 час летом, 2 часа зимой.</p>
+  <div class="grid g2">
+    <div class="card" style="border-color:var(--gold)">
+      <span class="tag warn">Наш вариант</span>
+      <h3>Прямой рейс Air Serbia</h3>
+      <ul><li>В пути около 3 часов, 1 808 км по прямой</li><li>В одну сторону от ≈17 000 ₽ в акциях осени 2026</li><li>Без пересадок, удобно для короткой поездки</li><li>Расписание на март 2027 может обновляться: проверьте дни вылета в поиске</li></ul>
+    </div>
+    <div class="card">
+      <span class="tag">Запасной вариант</span>
+      <h3>Через Стамбул</h3>
+      <ul><li>Turkish Airlines, Pegasus, AJet</li><li>В пути 7–8 часов с одной пересадкой</li><li>Иногда дешевле в «горячие» месяцы</li><li>Нужен запас по времени на стыковку</li></ul>
+    </div>
+  </div>
+  <table style="margin-top:18px">
+    <tr><th>Месяц</th><th>Янв</th><th>Фев</th><th>Мар</th><th>Апр</th><th>Май</th><th>Июн</th></tr>
+    <tr><td>Туда-обратно, ₽</td><td>45 107</td><td>42 703</td><td style="color:var(--gold);font-weight:600">45 686</td><td>56 016</td><td>76 583</td><td>80 275</td></tr>
+  </table>
+  <p class="src">Т-Банк Путешествия, минимальные найденные цены на одного; март (45 686 ₽) ближе всего к вашим датам. Поиск Aviasales на 15–19 марта для двоих откройте у себя: цены из него я получить не смог.</p>
+</section>
+
+<!-- 6 -->
+<section class="slide" id="s6" aria-label="Маршрут">
+  <div class="eyebrow">Маршрут на 5 дней</div>
+  <h2>Нажимайте на день, чтобы увидеть программу</h2>
+  <div class="row" style="margin:12px 0 14px">
+    <button class="btn" id="vA" aria-pressed="true">А. Белград и Нови-Сад</button>
+    <button class="btn" id="vB" aria-pressed="false">Б. Белград и Суботица</button>
+  </div>
+  <div class="rwrap">
+    <div class="dlist" id="dlist" role="group" aria-label="Дни поездки"></div>
+    <div class="card dpanel" id="dpanel"></div>
+    <div class="card mapbox">
+      <svg id="map" viewBox="0 0 300 330" role="img" aria-label="Схема маршрута: Суботица, Нови-Сад, Белград, Златибор">
+        <rect x="0" y="0" width="300" height="330" rx="10" fill="#10203A"/>
+        <g stroke="#3A5782" stroke-width="2" fill="none" stroke-dasharray="5 5">
+          <line x1="112" y1="126" x2="202" y2="173"/>
+          <line x1="202" y1="173" x2="92" y2="294"/>
+          <line x1="88" y1="31" x2="112" y2="126"/>
+        </g>
+        <g id="nodes"></g>
+        <text x="150" y="322" text-anchor="middle" font-size="11" fill="#8398B2">схема, не карта</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="slide" id="s7" aria-label="Бюджет">
+  <div class="eyebrow">Бюджет</div>
+  <h2>Калькулятор поездки на двоих</h2>
+  <div class="bwrap" style="margin-top:12px">
+    <div class="card">
+      <div class="ctl"><label for="c-month">Месяц</label><select id="c-month"></select><output id="o-month"></output></div>
+      <div class="ctl"><label for="c-fl">Билет на 1 чел.</label><input type="range" id="c-fl" min="30000" max="120000" step="1000"><output id="o-fl"></output></div>
+      <div class="ctl"><label for="c-n">Ночей</label><input type="range" id="c-n" min="3" max="8" step="1" value="4"><output id="o-n"></output></div>
+      <div class="ctl"><label for="c-h">Жильё за ночь</label><input type="range" id="c-h" min="30" max="200" step="5" value="70"><output id="o-h"></output></div>
+      <div class="ctl"><label for="c-f">Еда и досуг в день</label><input type="range" id="c-f" min="40" max="220" step="5" value="80"><output id="o-f"></output></div>
+      <div class="ctl"><label for="c-t">Автобусы, экскурсии</label><input type="range" id="c-t" min="30" max="600" step="10" value="80"><output id="o-t"></output></div>
+      <div class="ctl"><label for="c-i">Страховка</label><input type="range" id="c-i" min="0" max="150" step="5" value="40"><output id="o-i"></output></div>
+      <div class="ctl"><label for="c-r">Курс, ₽ за 1 €</label><input type="number" id="c-r" min="50" max="200" step="0.5" value="90"><output></output></div>
+      <p class="src">Суммы в € указаны на двоих. Значения по умолчанию взяты как ориентир для среднего уровня. Курс введите актуальный.</p>
+    </div>
+    <div class="card">
+      <div class="tag">Итого на двоих</div>
+      <div class="total" id="t-sum"></div>
+      <p id="t-per" style="margin-top:4px"></p>
+      <div class="stack" id="t-stack"></div>
+      <div class="leg" id="t-leg"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="slide" id="s8" aria-label="Деньги и оплата">
+  <div class="eyebrow">Деньги и оплата</div>
+  <h2>Как платить в Сербии</h2>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card"><span class="tag warn">Важно</span><h3>Российские карты</h3><p>Visa и Mastercard российских банков в Сербии не работают. Массового приёма «Мир» нет, UnionPay зависит от банка и терминала.</p></div>
+    <div class="card"><span class="tag">Основной способ</span><h3>Зарубежная карта и наличные</h3><p>Надёжнее всего иностранная или виртуальная карта плюс запас наличных евро. Карты принимают в отелях, магазинах и ресторанах.</p></div>
+    <div class="card"><span class="tag">Мелочи</span><h3>Динары</h3><p>Небольшая сумма в динарах нужна на рынках, в пекарнях, киосках, маленьких кафе и в междугородных автобусах.</p></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Где менять и снимать</h3><p>Евро меняйте в обменниках в центре Белграда, сверяя курс с табло. Банкоматы есть по всей стране: к концу 2025 года их было более 3 тысяч.</p></div>
+  <p class="src">Источники: Travelto, v-serbii.com.</p>
+</section>
+
+<!-- 9 -->
+<section class="slide" id="s9" aria-label="Подготовка">
+  <div class="eyebrow">Подготовка</div>
+  <h2>Чек-лист и график</h2>
+  <div class="cwrap" style="margin-top:12px">
+    <div>
+      <div class="prog" aria-hidden="true"><i id="p-bar"></i></div>
+      <p id="p-txt" style="color:var(--mute);margin-bottom:8px"></p>
+      <div id="chk"></div>
+    </div>
+    <div class="card">
+      <h3>Когда что делать</h3>
+      <div class="tl">
+        <div><b>Ноябрь 2026 — декабрь</b>Проверить паспорта, выбрать маршрут.</div>
+        <div><b>Декабрь — январь</b>Купить билеты на 15–19 марта и жильё с бесплатной отменой.</div>
+        <div><b>За 3 недели (конец февраля)</b>Оформить страховку, перепроверить правила въезда.</div>
+        <div><b>За неделю</b>Купить евро, скачать офлайн-карты, сохранить брони.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="slide" id="s10" aria-label="Вкус Сербии">
+  <div class="eyebrow">Что попробовать</div>
+  <h2>Шесть вкусов, ради которых стоит ехать</h2>
+  <div class="grid g3" style="margin-top:18px">
+    <div class="card"><h3>Чевапи и плескавица</h3><p>Гриль из рубленого мяса с лепёшкой лепиња и луком. Берите в любой кафане.</p></div>
+    <div class="card"><h3>Каймак</h3><p>Нежные сливки к мясу и хлебу, особенно в горах.</p></div>
+    <div class="card"><h3>Бурек и пекарни</h3><p>Слоёные пироги с сыром или мясом на завтрак. Платить лучше динарами.</p></div>
+    <div class="card"><h3>Ракия</h3><p>Фруктовый крепкий напиток, чаще сливовый. Хороший сувенир домой.</p></div>
+    <div class="card"><h3>Вино Карловцев</h3><p>Винодельческий центр рядом с Нови-Садом. Подвалы лучше посещать днём.</p></div>
+    <div class="card"><h3>Айвар</h3><p>Паста из печёного перца: банка легко помещается в багаж.</p></div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="slide" id="s11" aria-label="Источники">
+  <div class="eyebrow">Источники и что уточнить</div>
+  <h2>Данные собраны в ноябре 2026</h2>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h3>Что может измениться</h3><ul><li>Правила въезда для россиян</li><li>Расписание и цены рейсов на 2027</li><li>Курс динара и евро к рублю</li><li>Работа российских карт за рубежом</li></ul></div>
+    <div class="card"><h3>Ссылки</h3><ul>
+      <li><a href="https://t-j.ru/serbia-entry-rules/" target="_blank" rel="noopener">Т—Ж: правила въезда в Сербию</a></li>
+      <li><a href="https://polis812.ru/blog/?p=40301" target="_blank" rel="noopener">Polis812: визы для россиян</a></li>
+      <li><a href="https://www.tbank.ru/travel/flights/routes/LED/BEG/" target="_blank" rel="noopener">Т-Банк: билеты LED — BEG</a></li>
+      <li><a href="https://travelto.ru/blog/kak-platit-v-serbiya/" target="_blank" rel="noopener">Travelto: как платить в Сербии</a></li>
+      <li><a href="https://v-serbii.com/daily/cost-of-living" target="_blank" rel="noopener">v-serbii.com: стоимость жизни</a></li>
+      <li><a href="https://t-j.ru/list/cities-of-serbia/" target="_blank" rel="noopener">Т—Ж: города Сербии</a></li>
+    </ul></div>
+  </div>
+  <p class="src" style="margin-top:14px">Суммы в калькуляторе и цены на жильё, еду и страховку приведены как ориентиры и меняются на ваши значения.</p>
+</section>
+
+</div></div>
+
+<div id="nav">
+  <button class="nb" id="prev" aria-label="Назад">←</button>
+  <div class="dots" id="dots"></div>
+  <span class="cnt" id="cnt"></span>
+  <button class="nb" id="next" aria-label="Вперёд">→</button>
+  <button class="nb" id="fs" aria-label="Во весь экран" title="Во весь экран">⛶</button>
+</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var stage=document.getElementById('stage');
+  var body=document.body;
+  var cur=0;
+  var fmt=function(n){return Math.round(n).toLocaleString('ru-RU').replace(/ /g,' ');};
+
+  /* ---------- навигация и масштаб ---------- */
+  var dots=document.getElementById('dots');
+  slides.forEach(function(s,i){
+    var d=document.createElement('button');d.className='dot';d.setAttribute('aria-label','Слайд '+(i+1));
+    d.onclick=function(){go(i);};dots.appendChild(d);
+  });
+  function go(i){
+    cur=Math.max(0,Math.min(slides.length-1,i));
+    slides.forEach(function(s,k){s.classList.toggle('active',k===cur);});
+    [].forEach.call(dots.children,function(d,k){d.classList.toggle('active',k===cur);});
+    document.getElementById('cnt').textContent=(cur+1)+' / '+slides.length;
+    if(location.hash!=='#s'+(cur+1)){try{history.replaceState(null,'','#s'+(cur+1));}catch(e){}}
+  }
+  function fit(){
+    var flow=window.innerWidth<860;
+    body.classList.toggle('flow',flow);
+    if(flow){stage.style.transform='none';return;}
+    var k=Math.min(window.innerWidth/1280,(window.innerHeight-48)/720);
+    stage.style.transform='scale('+k+')';
+    stage.style.left=((window.innerWidth-1280*k)/2)+'px';
+    stage.style.top=((window.innerHeight-48-720*k)/2)+'px';
+  }
+  document.getElementById('prev').onclick=function(){go(cur-1);};
+  document.getElementById('next').onclick=function(){go(cur+1);};
+  document.getElementById('fs').onclick=function(){try{var r=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();if(r&&r.catch)r.catch(function(){});}catch(e){}};
+  document.addEventListener('keydown',function(e){
+    var t=e.target&&e.target.tagName;
+    if(t==='INPUT'&&e.target.type==='number'||t==='SELECT')return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'){go(cur+1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){go(cur-1);}
+    else if(e.key==='Home'){go(0);}else if(e.key==='End'){go(slides.length-1);}
+  });
+  window.addEventListener('resize',fit);
+  window.addEventListener('hashchange',function(){var m=/^#s(\d+)$/.exec(location.hash);if(m)go(+m[1]-1);});
+
+  /* ---------- 4. месяцы ---------- */
+  var MONTHS=[
+    {n:'Январь',t:'около 2 °C',f:45107,note:'Зима, возможен снег. Город спокойный, цены минимальные, много музеев и кофеен.'},
+    {n:'Февраль',t:'около 7 °C',f:42703,note:'Сыро и прохладно. Самый дешёвый перелёт, но для гор и прогулок рано.'},
+    {n:'Март',t:'около 11 °C',f:45686,note:'Ваши даты 15–19 марта. Ранняя весна с дождями: берите тёплую куртку и зонт. Подходит для городского отдыха без толп.'},
+    {n:'Апрель',t:'15–18 °C',f:56016,note:'Ночью 5–8 °C. Парки Белграда цветут. Православная Пасха в 2027 году выпадает на 2 мая: перед ней и в праздники спрос выше.'},
+    {n:'Май',t:'20–23 °C',f:76583,note:'Ночью 10–13 °C. Пик весны: тепло и зелено. Лучшее сочетание погоды для города и гор.'},
+    {n:'Июнь',t:'около 24 °C',f:80275,note:'Уже жарко, начинается высокий сезон. Для гор отлично, для долгих прогулок по городу жарковато.'}
+  ];
+  var mi=2;
+  var ml=document.getElementById('mlist'),bars=document.getElementById('bars');
+  var maxF=Math.max.apply(null,MONTHS.map(function(m){return m.f;}));
+  MONTHS.forEach(function(m,i){
+    var b=document.createElement('button');b.className='btn';b.setAttribute('aria-pressed','false');
+    b.innerHTML='<span>'+m.n+'</span><span style="opacity:.75">'+(i===2?'★':'')+'</span>';
+    b.onclick=function(){setMonth(i);};ml.appendChild(b);
+    var d=document.createElement('div');d.className='bar';
+    d.innerHTML='<b style="height:'+Math.round(m.f/maxF*140)+'px"></b><span>'+m.n.slice(0,3)+'<br>'+Math.round(m.f/1000)+' тыс.</span>';
+    d.style.cursor='pointer';d.onclick=function(){setMonth(i);};bars.appendChild(d);
+  });
+  function setMonth(i){
+    mi=i;var m=MONTHS[i];
+    [].forEach.call(ml.children,function(b,k){b.setAttribute('aria-pressed',k===i?'true':'false');});
+    [].forEach.call(bars.children,function(b,k){b.classList.toggle('on',k===i);});
+    document.getElementById('m-temp').textContent=m.t;
+    document.getElementById('m-note').textContent=m.note;
+    document.getElementById('m-price').innerHTML=fmt(m.f)+' <small>₽</small>';
+    document.getElementById('m-pnote').textContent=i>=4?'Дороже остальных: в выборке попали даты высокого сезона. Для двоих умножайте на два.':'Минимальная найденная цена туда-обратно на одного. Для двоих умножайте на два.';
+  }
+  var star=document.createElement('p');star.className='src';star.style.marginTop='6px';star.textContent='★ ваши даты: 15–19 марта';ml.appendChild(star);
+  setMonth(2);
+
+  /* ---------- 6. маршрут ---------- */
+  var NODES={bg:{x:202,y:173,l:'Белград'},ns:{x:112,y:126,l:'Нови-Сад'},zl:{x:92,y:294,l:'Златибор'},sb:{x:88,y:31,l:'Суботица'}};
+  var ROUTES={
+    A:[
+      {t:'Прилёт и Скадарлия',n:'bg',s:'Белград',li:['Вылет 15 марта, заселение','Вечер в Скадарлии: богемный квартал с кафанами и живой музыкой','Ужин с чевапи и местным вином']},
+      {t:'Старый Белград',n:'bg',s:'Белград',li:['Храм Святого Саввы утром','Пешеходная улица Князя Михаила','Калемегдан на закате: видно слияние Савы и Дуная']},
+      {t:'Нови-Сад и Карловци',n:'ns',s:'Нови-Сад',li:['Утром автобус из Белграда, дорога около часа','Петроварадинская крепость и центр Нови-Сада','Вечер в винных подвалах Сремски-Карловци']},
+      {t:'Земун и Авала',n:'bg',s:'Белград',li:['Земун: набережная и башня Гардош','Гора Авала с панорамой на город','Прощальный ужин, покупки']},
+      {t:'Домой',n:'bg',s:'Белград',li:['Утренний кофе и сувениры: ракия, айвар','Трансфер в аэропорт','Возвращение 19 марта']}
+    ],
+    B:[
+      {t:'Прилёт и Скадарлия',n:'bg',s:'Белград',li:['Вылет 15 марта, заселение','Вечер в Скадарлии','Ужин в кафане']},
+      {t:'Центр Белграда',n:'bg',s:'Белград',li:['Храм Святого Саввы','Князя Михаила и Калемегдан','Набережная Савы вечером']},
+      {t:'Нови-Сад и Карловци',n:'ns',s:'Нови-Сад',li:['Петроварадинская крепость','Центр Нови-Сада','Винные подвалы Карловцев, вечером обратно']},
+      {t:'Суботица',n:'sb',s:'Суботица',li:['Поездка на север к границе с Венгрией','Городская ратуша и сецессия в центре','Вечером возвращение в Белград']},
+      {t:'Домой',n:'bg',s:'Белград',li:['Утренний кофе и сувениры','Трансфер в аэропорт','Возвращение 19 марта']}
+    ]
+  };
+  var rv='A',rd=0;
+  var dl=document.getElementById('dlist'),dp=document.getElementById('dpanel'),nd=document.getElementById('nodes');
+  function drawRoute(){
+    var R=ROUTES[rv];
+    dl.innerHTML='';
+    R.forEach(function(d,i){
+      var b=document.createElement('button');b.className='btn';b.setAttribute('aria-pressed',i===rd?'true':'false');
+      b.innerHTML='День '+(i+1)+'<small>'+d.s+'</small>';
+      b.onclick=function(){rd=i;drawRoute();};dl.appendChild(b);
+    });
+    var d=R[rd];
+    dp.innerHTML='<div class="tag">День '+(rd+1)+' · '+d.s+'</div><h3>'+d.t+'</h3><ul>'+d.li.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
+    var used={};R.forEach(function(x){used[x.n]=1;});
+    var out='';
+    Object.keys(NODES).forEach(function(k){
+      var n=NODES[k],on=(k===d.n),vis=used[k];
+      if(!vis){out+='<circle cx="'+n.x+'" cy="'+n.y+'" r="5" fill="#2C4566"/><text x="'+(n.x+10)+'" y="'+(n.y+4)+'" font-size="12" fill="#6F86A3">'+n.l+'</text>';return;}
+      out+='<circle cx="'+n.x+'" cy="'+n.y+'" r="'+(on?11:7)+'" fill="'+(on?'#F2BC52':'#58C6DA')+'"/>'+
+           '<text x="'+(n.x+(k==='bg'?-14:14)+(k==='bg'?0:0))+'" y="'+(n.y+(on?5:4))+'" '+(k==='bg'?'text-anchor="end" ':'')+'font-size="14" font-weight="600" fill="'+(on?'#F2BC52':'#F1F5F9')+'">'+n.l+'</text>';
+    });
+    nd.innerHTML=out;
+  }
+  function setVar(v){rv=v;rd=0;document.getElementById('vA').setAttribute('aria-pressed',v==='A'?'true':'false');document.getElementById('vB').setAttribute('aria-pressed',v==='B'?'true':'false');drawRoute();}
+  document.getElementById('vA').onclick=function(){setVar('A');};
+  document.getElementById('vB').onclick=function(){setVar('B');};
+  drawRoute();
+
+  /* ---------- 7. калькулятор ---------- */
+  var cm=document.getElementById('c-month');
+  MONTHS.forEach(function(m,i){var o=document.createElement('option');o.value=i;o.textContent=m.n;cm.appendChild(o);});
+  cm.value=2;
+  var $=function(id){return document.getElementById(id);};
+  $('c-fl').value=MONTHS[2].f;
+  var COLORS=['#F2BC52','#58C6DA','#E85B4D','#9B8CF2','#7FD39B'];
+  function calc(){
+    var fl=+$('c-fl').value,n=+$('c-n').value,h=+$('c-h').value,f=+$('c-f').value,t=+$('c-t').value,ins=+$('c-i').value,r=+$('c-r').value||90;
+    $('o-fl').textContent=fmt(fl)+' ₽';$('o-n').textContent=n;$('o-h').textContent=h+' €';
+    $('o-f').textContent=f+' €';$('o-t').textContent=t+' €';$('o-i').textContent=ins+' €';
+    var days=n+1;
+    var parts=[
+      ['Билеты на двоих',fl*2],
+      ['Жильё, '+n+' ночей',h*n*r],
+      ['Еда и досуг, '+days+' дней',f*days*r],
+      ['Автобусы и экскурсии',t*r],
+      ['Страховка',ins*r]
+    ];
+    var sum=parts.reduce(function(a,p){return a+p[1];},0);
+    $('t-sum').textContent=fmt(sum)+' ₽';
+    $('t-per').textContent='≈ '+fmt(sum/2)+' ₽ на человека, ≈ '+fmt(sum/r)+' € всего';
+    $('t-stack').innerHTML=parts.map(function(p,i){return '<i style="width:'+(p[1]/sum*100).toFixed(2)+'%;background:'+COLORS[i]+'"></i>';}).join('');
+    $('t-leg').innerHTML=parts.map(function(p,i){return '<span class="k" style="--c:'+COLORS[i]+'">'+p[0]+'</span><span>'+fmt(p[1])+' ₽</span>';}).join('');
+  }
+  cm.onchange=function(){$('c-fl').value=MONTHS[+cm.value].f;calc();};
+  ['c-fl','c-n','c-h','c-f','c-t','c-i','c-r'].forEach(function(id){$(id).addEventListener('input',calc);});
+  calc();
+
+  /* ---------- 9. чек-лист ---------- */
+  var ITEMS=[
+    'Загранпаспорта у обоих, срок не менее 90 дней после возвращения',
+    'Подтверждены даты: вылет 15 марта, возвращение 19 марта',
+    'Куплены билеты Санкт-Петербург — Белград туда-обратно',
+    'Забронировано жильё с бесплатной отменой',
+    'Оформлена страховка с покрытием от 20 000 € на каждого',
+    'Есть зарубежная карта и запас наличных евро',
+    'Выбран маршрут А или Б, найдены автобусы до Нови-Сада',
+    'Правила въезда перепроверены за 2–3 недели до вылета',
+    'Брони, полис и билеты сохранены офлайн и распечатаны'
+  ];
+  var state={};
+  try{state=JSON.parse(localStorage.getItem('serbia2027-chk')||'{}')||{};}catch(e){state={};}
+  var cl=$('chk');
+  ITEMS.forEach(function(txt,i){
+    var l=document.createElement('label');l.className='chk';
+    var c=document.createElement('input');c.type='checkbox';c.id='ck'+i;c.checked=!!state[i];
+    var s=document.createElement('span');s.textContent=txt;
+    c.onchange=function(){state[i]=c.checked;try{localStorage.setItem('serbia2027-chk',JSON.stringify(state));}catch(e){}prog();};
+    l.appendChild(c);l.appendChild(s);cl.appendChild(l);
+  });
+  function prog(){
+    var done=ITEMS.filter(function(_,i){return state[i];}).length;
+    $('p-bar').style.width=(done/ITEMS.length*100)+'%';
+    $('p-txt').textContent='Готово '+done+' из '+ITEMS.length;
+  }
+  prog();
+
+  /* ---------- старт ---------- */
+  fit();
+  var m0=/^#s(\d+)$/.exec(location.hash);
+  go(m0?+m0[1]-1:0);
+})();
+</script>
+</body>
+</html>
